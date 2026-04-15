@@ -132,6 +132,14 @@ export default function UruguayMap({ className = '', selectedDepartmentId, onDep
 		y: 0
 	});
 
+	const getCachedDepartmentCounts = () => {
+		if (typeof window === 'undefined') {
+			return {};
+		}
+
+		return (window as Window & { __uruguayMapCounts?: CountsMap }).__uruguayMapCounts ?? {};
+	};
+
 	const selectedId = selectedDepartmentId ?? internalSelectedDepartmentId;
 
     const { departments, selectedDepartment } = useMemo(() => {
@@ -151,6 +159,8 @@ export default function UruguayMap({ className = '', selectedDepartmentId, onDep
 	}, [selectedId]);
 
 	useEffect(() => {
+		setDepartmentCounts(getCachedDepartmentCounts());
+
 		const handleCountsUpdated = (event: Event) => {
 			const detail = (event as CustomEvent<{ counts?: CountsMap }>).detail;
 			setDepartmentCounts(detail?.counts ?? {});

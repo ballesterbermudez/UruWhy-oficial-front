@@ -124,6 +124,8 @@ const initialUsers = await fetchUsers();
   }
 
   function syncMapCounters(countMap) {
+    window.__uruguayMapCounts = countMap;
+
     window.dispatchEvent(
       new CustomEvent('uruguay-map:counts-updated', {
         detail: { counts: countMap }
