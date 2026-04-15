@@ -1,0 +1,36 @@
+<aside id="user-directory-panel" class="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white/75 p-5 shadow-xl shadow-slate-900/10 backdrop-blur">
+  <header class="mb-4 border-b border-slate-200 pb-4">
+    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">Comunidad Discord</p>
+    <h2 id="panel-title" class="mt-2 text-2xl font-semibold text-slate-900">Selecciona un departamento</h2>
+    <p id="panel-subtitle" class="mt-1 text-sm text-slate-500">Explora los usuarios por departamento.</p>
+  </header>
+
+  <div id="active-filters" class="mb-4 flex flex-wrap gap-2 text-xs text-slate-500"></div>
+
+  <div id="user-scroll-container" class="min-h-0 flex-1 overflow-y-auto pr-1">
+    <ul id="user-list" class="space-y-3"></ul>
+
+    <p id="empty-state" class="hidden rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+      No hay usuarios que coincidan con este filtro.
+    </p>
+  </div>
+</aside>
+
+<style>
+  #user-scroll-container {
+    scrollbar-gutter: stable;
+  }
+
+  #user-scroll-container::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  #user-scroll-container::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.45);
+  }
+
+  #user-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+</style>

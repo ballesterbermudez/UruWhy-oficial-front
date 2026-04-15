@@ -1,0 +1,65 @@
+---
+import { uruguayDepartments } from '../data/uruguayDepartments';
+
+const { selectedDepartmentId = '' } = Astro.props;
+---
+
+<div class="relative rounded-3xl border border-slate-200/80 bg-white/70 p-4 shadow-xl shadow-sky-900/10 backdrop-blur">
+  <div id="map-tooltip" class="pointer-events-none absolute z-20 hidden -translate-y-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white"></div>
+
+  <svg
+    id="uruguay-map"
+    viewBox="95 10 370 620"
+    role="img"
+    aria-label="Mapa interactivo de Uruguay con 19 departamentos"
+    class="h-auto w-full"
+  >
+    <title>Selecciona un departamento para ver usuarios de Discord</title>
+
+    <path
+      d="M189 42 C219 24 270 22 312 38 C354 54 395 87 399 128 C402 170 401 216 412 264 C424 316 451 367 438 426 C427 479 378 516 331 548 C291 575 241 610 197 590 C154 571 132 520 117 470 C103 421 107 371 125 322 C141 277 122 244 127 201 C132 156 158 78 189 42Z"
+      class="pointer-events-none fill-cyan-50/85 stroke-slate-400 stroke-[2.4]"
+    />
+
+    {uruguayDepartments.map((department) => (
+      <g class="department-group" data-department-group={department.id}>
+        <polygon
+          points={department.points}
+          data-department-id={department.id}
+          data-department-name={department.name}
+          class:list={[
+            'department-shape cursor-pointer fill-sky-100 stroke-slate-600 stroke-[1.6] transition-all duration-300 hover:fill-cyan-300 hover:drop-shadow-lg',
+            selectedDepartmentId === department.id && 'fill-cyan-400'
+          ]}
+          tabindex="0"
+        />
+
+        <text
+          x={department.labelX}
+          y={department.labelY}
+          class="pointer-events-none select-none text-[10px] font-semibold tracking-wide text-slate-900"
+          text-anchor="middle"
+        >
+          {department.name}
+        </text>
+
+        <circle
+          cx={department.labelX + 26}
+          cy={department.labelY - 12}
+          r="11"
+          class="pointer-events-none fill-white/95 stroke-slate-400 stroke-1"
+        />
+
+        <text
+          x={department.labelX + 26}
+          y={department.labelY - 8}
+          data-count-id={department.id}
+          class="pointer-events-none select-none text-[10px] font-bold text-slate-700"
+          text-anchor="middle"
+        >
+          0
+        </text>
+      </g>
+    ))}
+  </svg>
+</div>

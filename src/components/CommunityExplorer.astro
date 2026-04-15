@@ -1,0 +1,241 @@
+---
+import UruguayMap from './UruguayMap.tsx';
+import UserDirectoryPanel from './UserDirectoryPanel.astro';
+import { uruguayDepartments } from '../data/uruguayDepartments';
+import { fetchDepartmentsWithCounts, fetchUsers } from '../lib/api.js';
+
+const initialDepartments = await fetchDepartmentsWithCounts();
+const initialUsers = await fetchUsers();
+---
+
+<section class="min-h-screen bg-[radial-gradient(circle_at_20%_20%,#cffafe_0%,#f8fafc_35%,#ecfeff_100%)] px-4 py-10 text-slate-800 sm:px-8">
+  <div class="mx-auto max-w-7xl">
+    <header class="mb-8 rounded-3xl border border-sky-100/80 bg-white/80 p-6 shadow-lg shadow-sky-900/5 backdrop-blur">
+      <p class="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">UruWhy Discord Oficial</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Mapa de la comunidad por departamento</h1>
+      <p class="mt-3 max-w-3xl text-slate-600">
+        Haz click en un departamento para ver sus usuarios. Puedes buscar por nombre de Discord o filtrar para organizar mejor la comunidad.
+      </p>
+    </header>
+
+    <section class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Usuarios totales</p>
+        <p id="total-users" class="mt-1 text-2xl font-semibold text-slate-900">0</p>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Departamentos activos</p>
+        <p id="active-departments" class="mt-1 text-2xl font-semibold text-slate-900">0</p>
+      </article>
+      <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Departamento seleccionado</p>
+        <p id="selected-department" class="mt-1 text-2xl font-semibold text-cyan-800">Ninguno</p>
+      </article>
+    </section>
+
+    <section class="mb-6 grid grid-cols-1 gap-3 rounded-3xl border border-slate-200/80 bg-white/80 p-4 shadow-sm sm:grid-cols-[1fr_auto]">
+      <label class="text-sm font-medium text-slate-600">
+        Buscar usuario
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Ej: mateCoder"
+          class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+        />
+      </label>
+
+      <label class="text-sm font-medium text-slate-600">
+        Filtrar departamento
+        <select
+          id="department-select"
+          class="mt-1 w-full min-w-52 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+        >
+          <option value="all">Todos</option>
+          {uruguayDepartments.map((department) => (
+            <option value={department.id}>{department.name}</option>
+          ))}
+        </select>
+      </label>
+    </section>
+
+    <section class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div class="min-h-0">
+        <UruguayMap client:load />
+      </div>
+      <div class="min-h-0 lg:h-[min(91vh,980px)]">
+        <UserDirectoryPanel />
+      </div>
+    </section>
+  </div>
+</section>
+
+<script define:vars={{ initialUsers, initialDepartments }}>
+  const listElement = document.querySelector('#user-list');
+  const emptyStateElement = document.querySelector('#empty-state');
+  const panelTitleElement = document.querySelector('#panel-title');
+  const panelSubtitleElement = document.querySelector('#panel-subtitle');
+  const activeFiltersElement = document.querySelector('#active-filters');
+  const searchInput = document.querySelector('#search-input');
+  const departmentSelect = document.querySelector('#department-select');
+  const selectedDepartmentStat = document.querySelector('#selected-department');
+  const totalUsersStat = document.querySelector('#total-users');
+  const activeDepartmentsStat = document.querySelector('#active-departments');
+
+  let users = initialUsers;
+  let departments = initialDepartments;
+  const departmentNameById = {};
+
+  function createUserItemMarkup(user) {
+    const avatarMarkup = user.avatar
+      ? `<img src="${user.avatar}" alt="Avatar de ${user.username}" class="h-10 w-10 rounded-full border border-slate-200 bg-white object-cover" loading="lazy" />`
+      : `<div class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">${user.username.slice(0, 2).toUpperCase()}</div>`;
+
+    return `
+      <li class="user-card animate-slide-in rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-cyan-300 hover:shadow">
+        <div class="flex items-center gap-3">
+          ${avatarMarkup}
+          <div>
+            <p class="font-semibold text-slate-900">${user.username}</p>
+            <p class="text-xs text-slate-500">ID: ${user.discordId}</p>
+            <p class="text-xs text-cyan-700">${departmentNameById[user.department] || user.department}</p>
+          </div>
+        </div>
+      </li>
+    `;
+  }
+
+  function normalizedText(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function getDepartmentCounts() {
+    return users.reduce((acc, user) => {
+      acc[user.department] = (acc[user.department] || 0) + 1;
+      return acc;
+    }, {});
+  }
+
+  function syncMapCounters(countMap) {
+    window.dispatchEvent(
+      new CustomEvent('uruguay-map:counts-updated', {
+        detail: { counts: countMap }
+      })
+    );
+  }
+
+  function applyFilters() {
+    const searchTerm = normalizedText(searchInput?.value);
+    const selectedFilter = departmentSelect?.value || 'all';
+
+    const visibleUsers = users.filter((user) => {
+      const matchesText =
+        !searchTerm ||
+        normalizedText(user.username).includes(searchTerm) ||
+        normalizedText(user.discordId).includes(searchTerm);
+      const matchesDepartment = selectedFilter === 'all' || user.department === selectedFilter;
+
+      return matchesText && matchesDepartment;
+    });
+
+    if (selectedFilter === 'all') {
+      selectedDepartmentStat.textContent = 'Ninguno';
+    } else {
+      const departmentName = departmentNameById[selectedFilter] || selectedFilter;
+      selectedDepartmentStat.textContent = departmentName;
+    }
+
+    const panelTitle = selectedFilter === 'all' ? 'Todos los departamentos' : `Departamento: ${departmentNameById[selectedFilter] || selectedFilter}`;
+    panelTitleElement.textContent = panelTitle;
+    panelSubtitleElement.textContent = `${visibleUsers.length} usuario(s) encontrados`;
+
+    activeFiltersElement.innerHTML = '';
+    if (selectedFilter !== 'all') {
+      const departmentName = departmentNameById[selectedFilter] || selectedFilter;
+      activeFiltersElement.innerHTML += `<span class="rounded-full bg-cyan-50 px-3 py-1 font-medium text-cyan-700">Departamento: ${departmentName}</span>`;
+    }
+    if (searchTerm) {
+      activeFiltersElement.innerHTML += `<span class="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">Busqueda: ${searchTerm}</span>`;
+    }
+
+    if (visibleUsers.length === 0) {
+      listElement.innerHTML = '';
+      emptyStateElement.classList.remove('hidden');
+      return;
+    }
+
+    emptyStateElement.classList.add('hidden');
+    listElement.innerHTML = visibleUsers.map(createUserItemMarkup).join('');
+  }
+
+  function bindMapInteractions() {
+    window.addEventListener('uruguay-map:department-click', (event) => {
+      const detail = event.detail || {};
+
+      if (departmentSelect) {
+        departmentSelect.value = detail.departmentId || 'all';
+      }
+
+      if (selectedDepartmentStat && detail.departmentName) {
+        selectedDepartmentStat.textContent = detail.departmentName;
+      }
+
+      applyFilters();
+    });
+
+    departmentSelect?.addEventListener('change', (event) => {
+      const currentValue = event.target.value;
+
+      window.dispatchEvent(
+        new CustomEvent('uruguay-map:selection-changed', {
+          detail: { departmentId: currentValue === 'all' ? null : currentValue }
+        })
+      );
+
+      applyFilters();
+    });
+  }
+
+  function bootstrap() {
+    console.log('Bootstrap:', { users: users.length, departments: departments.length });
+
+    departments.forEach((department) => {
+      departmentNameById[department.id] = department.name;
+    });
+
+    totalUsersStat.textContent = String(users.length);
+    activeDepartmentsStat.textContent = String(departments.filter((d) => d.userCount > 0).length);
+
+    const dynamicCounts = getDepartmentCounts();
+    syncMapCounters(dynamicCounts);
+    bindMapInteractions();
+    applyFilters();
+  }
+
+  searchInput?.addEventListener('input', applyFilters);
+  bootstrap();
+</script>
+
+<style>
+  .department-shape {
+    transform-origin: center;
+  }
+
+  .department-shape:hover {
+    transform: translateY(-1px) scale(1.01);
+  }
+
+  .animate-slide-in {
+    animation: slideIn 280ms ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
