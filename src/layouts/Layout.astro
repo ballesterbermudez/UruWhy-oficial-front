@@ -67,8 +67,8 @@ const DISCORD_AUTH_URL = `${BACKEND_URL}/auth/discord`;
 				}
 
 				const returnPath = `${window.location.pathname}${window.location.search}` || '/';
-				const FRONTEND_LOCAL_ORIGIN = 'http://localhost:4321';
-				const returnUrl = new URL(returnPath, FRONTEND_LOCAL_ORIGIN).toString();
+				const currentOrigin = window.location.origin;
+				const returnUrl = new URL(returnPath, currentOrigin).toString();
 				const url = new URL(`${BACKEND_URL}/auth/discord`);
 
 				// OAuth2 standard: backend can read state and redirect to this exact frontend URL.
