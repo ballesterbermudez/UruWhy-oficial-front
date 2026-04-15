@@ -49,7 +49,7 @@ export const mockUsers = [
   { username: 'northStack', discordId: '394850120394850217', department: 'artigas', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=northStack' },
 
   // Salto (4 usuarios)
-  { username: 'saltoStack', discordId: '394850120394850131', department: 'salto', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=saltoStack' },
+  { username: 'FranSaltenioPuto', discordId: '394850120394850131', department: 'salto', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=saltoStack' },
   { username: 'termasDev', discordId: '394850120394850132', department: 'salto', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=termasDev' },
   { username: 'altoWebDev', discordId: '394850120394850218', department: 'salto', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=altoWebDev' },
   { username: 'saltoBit', discordId: '394850120394850219', department: 'salto', avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=saltoBit' },
