@@ -14,8 +14,8 @@ type GeoDepartment = {
 };
 
 type DepartmentClickDetail = {
-	departmentId: string;
-	departmentName: string;
+	departmentId: string | null;
+	departmentName: string | null;
 };
 
 type CountsMap = Record<string, number>;
@@ -23,7 +23,7 @@ type CountsMap = Record<string, number>;
 type UruguayMapProps = {
 	className?: string;
 	selectedDepartmentId?: string;
-	onDepartmentClick?: (departmentId: string, departmentName: string) => void;
+	onDepartmentClick?: (departmentId: string | null, departmentName: string | null) => void;
 };
 
 type Bounds = {
@@ -171,15 +171,20 @@ export default function UruguayMap({ className = '', selectedDepartmentId, onDep
 	}, []);
 
 	const syncSelection = (departmentId: string, departmentName: string) => {
+		const isTogglingOff = selectedId === departmentId;
+		const nextDepartmentId = isTogglingOff ? '' : departmentId;
+		const eventDepartmentId = isTogglingOff ? null : departmentId;
+		const eventDepartmentName = isTogglingOff ? null : departmentName;
+
 		if (selectedDepartmentId === undefined) {
-			setInternalSelectedDepartmentId(departmentId);
+			setInternalSelectedDepartmentId(nextDepartmentId);
 		}
 
-		onDepartmentClick?.(departmentId, departmentName);
+		onDepartmentClick?.(eventDepartmentId, eventDepartmentName);
 
 		window.dispatchEvent(
 			new CustomEvent<DepartmentClickDetail>('uruguay-map:department-click', {
-				detail: { departmentId, departmentName }
+				detail: { departmentId: eventDepartmentId, departmentName: eventDepartmentName }
 			})
 		);
 	};
